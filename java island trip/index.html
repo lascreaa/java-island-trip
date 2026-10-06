@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>JAVA ISLAND TRIP — Jelajah Jawa dengan nyaman</title>
+  <meta name="description" content="Paket trip dan rental mobil terpercaya untuk menjelajah Jogja dan Jawa Tengah." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="JAVA ISLAND TRIP home"><span class="brand-mark">JI</span><span><strong>JAVA ISLAND</strong><small>TRIP</small></span></a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="siteNav" aria-expanded="false">☰</button>
+    <nav id="siteNav" aria-label="Navigasi utama">
+      <a href="#all-packages" data-i18n="nav.packages">Paket Trip</a>
+      <a href="#rental-page" data-i18n="nav.rental">Rental Mobil</a>
+      <a href="#promo" data-i18n="nav.promo">Promo</a>
+      <a href="#about" data-i18n="nav.about">Tentang Kami</a>
+    </nav>
+    <div class="header-actions"><button class="lang-switch" id="langSwitch" type="button">English</button><button class="audience-switch" id="audienceSwitch" type="button">Ganti pilihan</button><a class="button button-sm header-wa" href="https://wa.me/6287839456221" target="_blank" rel="noreferrer">WhatsApp ↗</a></div>
+  </header>
+
+  <main id="app"></main>
+  <a class="floating-wa" href="https://wa.me/6287839456221" target="_blank" rel="noreferrer" aria-label="Chat WhatsApp JAVA ISLAND TRIP"><span>◉</span><strong>WhatsApp</strong></a>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div><a class="brand brand-light" href="#home"><span class="brand-mark">JI</span><span><strong>JAVA ISLAND</strong><small>TRIP</small></span></a><p data-i18n="footer.tagline">Perjalanan yang terasa dekat, cerita yang tinggal lebih lama.</p></div>
+      <div><h4 data-i18n="footer.explore">Jelajahi</h4><a href="#all-packages" data-i18n="nav.packages">Paket Trip</a><a href="#rental-page" data-i18n="nav.rental">Rental Mobil</a><a href="#promo" data-i18n="nav.promo">Promo</a></div>
+      <div><h4 data-i18n="footer.contact">Hubungi kami</h4><a href="https://wa.me/6287839456221" target="_blank" rel="noreferrer">+62 878-3945-6221</a><a href="mailto:hello@javaislandtrip.com">hello@javaislandtrip.com</a><span>Yogyakarta, Indonesia</span></div>
+      <div><h4 data-i18n="footer.follow">Ikuti perjalanan</h4><div class="socials"><a href="#" aria-label="Instagram">ig</a><a href="#" aria-label="TikTok">tk</a><a href="#" aria-label="Facebook">fb</a></div></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 JAVA ISLAND TRIP</span><span data-i18n="footer.legal">Syarat &amp; Ketentuan | Kebijakan Privasi</span></div>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
