@@ -1,0 +1,16 @@
+{
+  "name": "java-island-trip",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "import:postgres": "node scripts/import-sqlite-to-postgres.js"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
