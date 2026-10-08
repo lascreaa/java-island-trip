@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>JAVA ISLAND TRIP — Jelajah Jawa dengan nyaman</title>
-  <meta name="description" content="Paket trip dan rental mobil terpercaya untuk menjelajah Jogja dan Jawa Tengah." />
+  <title>JAVA ISLAND TRIP — Malaysia Hiking Trip & Rental Mobil</title>
+  <meta name="description" content="Paket hiking Gunung Prau & Merbabu untuk wisatawan Malaysia (RM), plus rental mobil universal (IDR) untuk menjelajah Jawa." />
   <link rel="canonical" href="https://javaislandtrip.com/" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="JAVA ISLAND TRIP — Jelajah Jawa dengan nyaman" />
-  <meta property="og:description" content="Paket trip dan rental mobil dengan driver untuk Jogja dan Jawa Tengah." />
+  <meta property="og:title" content="JAVA ISLAND TRIP — Malaysia Hiking Trip & Rental Mobil" />
+  <meta property="og:description" content="Hiking Prau & Merbabu untuk tamu Malaysia (RM ONLY) dan rental mobil universal (IDR)." />
   <meta property="og:url" content="https://javaislandtrip.com/" />
-  <meta property="og:image" content="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=85" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=85" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23334EAC'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>J</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -19,17 +20,67 @@
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ===== Welcome Gate (wajib pilih, kunjungan pertama) ===== -->
+  <div class="modal-overlay" id="welcomeGate" role="dialog" aria-modal="true" aria-labelledby="welcomeGateTitle" hidden>
+    <div class="welcome-modal">
+      <div class="welcome-modal-mark">✦</div>
+      <h2 id="welcomeGateTitle">Selamat datang! <span>Welcome!</span></h2>
+      <p class="welcome-modal-sub">Pilih wilayah Anda agar harga tampil dengan benar.<br><em>Choose your region so prices show correctly.</em></p>
+      <div class="region-grid">
+        <button type="button" class="region-bubble region-id" data-region="id">
+          <span class="region-flag">🇮🇩</span>
+          <strong>Indonesia</strong>
+          <small>Harga IDR · Bahasa Indonesia</small>
+        </button>
+        <button type="button" class="region-bubble region-my" data-region="my">
+          <span class="region-flag">🇲🇾</span>
+          <strong>Malaysia</strong>
+          <small>Harga RM · English</small>
+        </button>
+      </div>
+      <p class="welcome-modal-note">Pilihan bisa diubah kapan saja lewat ikon ⚙ di kanan atas.<br><em>You can change this anytime via the ⚙ icon.</em></p>
+    </div>
+  </div>
+
+  <!-- ===== Settings Popover / Bottom Sheet ===== -->
+  <div class="settings-overlay" id="settingsOverlay" hidden></div>
+  <div class="settings-popover" id="settingsPopover" role="dialog" aria-modal="false" aria-labelledby="settingsTitle" hidden>
+    <div class="settings-head">
+      <h3 id="settingsTitle">Pengaturan</h3>
+      <button type="button" class="settings-close" id="settingsClose" aria-label="Tutup">×</button>
+    </div>
+    <div class="settings-group">
+      <p class="settings-label">Wilayah / Region</p>
+      <div class="settings-options">
+        <button type="button" class="settings-option" data-set-region="id"><span>🇮🇩</span><span><strong>Indonesia</strong><small>IDR</small></span></button>
+        <button type="button" class="settings-option" data-set-region="my"><span>🇲🇾</span><span><strong>Malaysia</strong><small>RM</small></span></button>
+      </div>
+    </div>
+    <div class="settings-group">
+      <p class="settings-label">Bahasa / Language</p>
+      <div class="settings-options">
+        <button type="button" class="settings-option" data-set-lang="id"><span>ID</span><span><strong>Indonesia</strong></span></button>
+        <button type="button" class="settings-option" data-set-lang="en"><span>EN</span><span><strong>English</strong></span></button>
+      </div>
+    </div>
+  </div>
+
   <header class="site-header">
     <a class="brand" href="#home" aria-label="JAVA ISLAND TRIP home"><span class="brand-mark">JI</span><span><strong>JAVA ISLAND</strong><small>TRIP</small></span></a>
     <button class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="siteNav" aria-expanded="false">☰</button>
     <nav id="siteNav" aria-label="Navigasi utama">
+      <a href="#malaysia" class="nav-malaysia" data-i18n="nav.malaysia">Malaysia Trip</a>
       <a href="#all-packages" data-i18n="nav.packages">Paket Trip</a>
       <a href="#rental-page" data-i18n="nav.rental">Rental Mobil</a>
       <a href="#promo" data-i18n="nav.promo">Promo</a>
       <a href="#about" data-i18n="nav.about">Tentang Kami</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
     </nav>
-    <div class="header-actions"><button class="lang-switch" id="langSwitch" type="button">English</button><button class="audience-switch" id="audienceSwitch" type="button">Ganti pilihan</button><a class="button button-sm header-wa" href="https://wa.me/6287839456221" target="_blank" rel="noreferrer">WhatsApp ↗</a></div>
+    <div class="header-actions">
+      <button class="gear-btn" id="settingsBtn" type="button" aria-label="Pengaturan wilayah & bahasa" aria-haspopup="dialog">⚙</button>
+      <a class="button button-sm header-wa" href="https://wa.me/6287839456221" target="_blank" rel="noreferrer">WhatsApp ↗</a>
+    </div>
   </header>
 
   <main id="app"></main>
@@ -38,7 +89,7 @@
   <footer class="site-footer">
     <div class="footer-main">
       <div><a class="brand brand-light" href="#home"><span class="brand-mark">JI</span><span><strong>JAVA ISLAND</strong><small>TRIP</small></span></a><p data-i18n="footer.tagline">Perjalanan yang terasa dekat, cerita yang tinggal lebih lama.</p></div>
-      <div><h4 data-i18n="footer.explore">Jelajahi</h4><a href="#all-packages" data-i18n="nav.packages">Paket Trip</a><a href="#rental-page" data-i18n="nav.rental">Rental Mobil</a><a href="#promo" data-i18n="nav.promo">Promo</a><a href="#faq" data-i18n="nav.faq">FAQ</a></div>
+      <div><h4 data-i18n="footer.explore">Jelajahi</h4><a href="#malaysia" data-i18n="nav.malaysia">Malaysia Trip</a><a href="#all-packages" data-i18n="nav.packages">Paket Trip</a><a href="#rental-page" data-i18n="nav.rental">Rental Mobil</a><a href="#promo" data-i18n="nav.promo">Promo</a><a href="#faq" data-i18n="nav.faq">FAQ</a></div>
       <div><h4 data-i18n="footer.contact">Hubungi kami</h4><a href="https://wa.me/6287839456221" target="_blank" rel="noreferrer">+62 878-3945-6221</a><a href="mailto:hello@javaislandtrip.com">hello@javaislandtrip.com</a><span>Yogyakarta, Indonesia</span></div>
       <div><h4 data-i18n="footer.follow">Ikuti perjalanan</h4><div class="socials"><a href="#" aria-label="Instagram">ig</a><a href="#" aria-label="TikTok">tk</a><a href="#" aria-label="Facebook">fb</a></div></div>
     </div>

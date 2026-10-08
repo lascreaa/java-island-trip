@@ -230,6 +230,7 @@ addColumn('package_variants', 'en_itinerary_json', "TEXT NOT NULL DEFAULT '[]'")
 addColumn('package_variants', 'en_include_json', "TEXT NOT NULL DEFAULT '[]'");
 addColumn('package_variants', 'en_exclude_json', "TEXT NOT NULL DEFAULT '[]'");
 addColumn('package_variants', 'en_note', "TEXT DEFAULT ''");
+addColumn('packages', 'trail', "TEXT DEFAULT ''");
 
 const now = () => new Date().toISOString();
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -321,9 +322,18 @@ if (db.prepare('SELECT COUNT(*) AS n FROM faqs').get().n === 0) {
   [
     ['Apakah harga sudah termasuk driver?', 'Does the price include a driver?', 'Ya, layanan publik kami menggunakan kendaraan dengan driver.', 'Yes. Our public services include a professional driver.', 'booking', 1],
     ['Bagaimana cara melakukan pembayaran?', 'How do I pay?', 'Pembayaran dilakukan manual melalui WhatsApp setelah Owner mengonfirmasi ketersediaan.', 'Payment is arranged manually through WhatsApp after the Owner confirms availability.', 'payment', 2],
-    ['Berapa jumlah peserta yang dapat dipilih?', 'How many guests can I select?', 'Kalkulator paket mendukung 2 sampai 9 peserta. Untuk rombongan lebih besar, hubungi kami melalui WhatsApp.', 'Package pricing supports 2 to 9 guests. Contact us on WhatsApp for larger groups.', 'booking', 3]
+    ['Berapa jumlah peserta yang dapat dipilih?', 'How many guests can I select?', 'Kalkulator paket mendukung 2 sampai 9 peserta. Untuk rombongan lebih besar, hubungi kami melalui WhatsApp.', 'Package pricing supports 2 to 9 guests. Contact us on WhatsApp for larger groups.', 'booking', 3],
+    ['Apakah ada paket khusus wisatawan Malaysia?', 'Is there a package for Malaysian travellers?', 'Ya. Paket Hiking Malaysia (Gunung Prau via Patak Banteng, Gunung Merbabu via Suwanting, dan Combo) dihargai dalam Ringgit (RM) dengan minimal 4 peserta per grup.', 'Yes. The Malaysia Hiking packages (Mount Prau via Patak Banteng, Mount Merbabu via Suwanting, and a Combo) are priced in Ringgit (RM) with a minimum of 4 guests per group.', 'booking', 4]
   ].forEach((item) => faqInsert.run(item[0], item[1], item[2], item[3], item[4], item[5], 1, 0, now(), now()));
 }
+/* Ensure Malaysia FAQ exists even if faqs were already seeded (idempotent). */
+(function ensureMalaysiaFaq() {
+  const exists = db.prepare("SELECT 1 FROM faqs WHERE question LIKE '%Malaysia%' OR en_question LIKE '%Malaysia%'").get();
+  if (!exists) {
+    db.prepare('INSERT INTO faqs (question,en_question,answer,en_answer,category,sort_order,published,archived,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .run('Apakah ada paket khusus wisatawan Malaysia?', 'Is there a package for Malaysian travellers?', 'Ya. Paket Hiking Malaysia (Gunung Prau via Patak Banteng, Gunung Merbabu via Suwanting, dan Combo) dihargai dalam Ringgit (RM) dengan minimal 4 peserta per grup.', 'Yes. The Malaysia Hiking packages (Mount Prau via Patak Banteng, Mount Merbabu via Suwanting, and a Combo) are priced in Ringgit (RM) with a minimum of 4 guests per group.', 'booking', 4, 1, 0, now(), now());
+  }
+})();
 if (db.prepare('SELECT COUNT(*) AS n FROM homepage_sections').get().n === 0) {
   const sectionInsert = db.prepare('INSERT INTO homepage_sections (section_key,title,en_title,body,en_body,image,sort_order,visible,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)');
   [
@@ -333,38 +343,156 @@ if (db.prepare('SELECT COUNT(*) AS n FROM homepage_sections').get().n === 0) {
 }
 
 const seedPackages = [
-  { id: 'borobudur-merapi', title: 'Borobudur & Merapi Escape', enTitle: 'Borobudur & Merapi Escape', area: 'Jogja', duration: 1, theme: 'culture', price: 750000, tag: 'Best Seller', image: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=900&q=85', desc: 'Candi megah, udara pegunungan, dan cerita lokal dalam satu hari.', enDesc: 'Ancient temples, mountain air, and local stories in one day.', variants: ['Borobudur - Merapi', 'Borobudur - Prambanan'], itinerary: ['Jemput pagi dan sarapan lokal', 'Eksplorasi Candi Borobudur', 'Jeep tour lereng Merapi', 'Kembali ke kota saat senja'] },
-  { id: 'dieng-golden-sunrise', title: 'Dieng Golden Sunrise', enTitle: 'Dieng Golden Sunrise', area: 'Dieng', duration: 2, theme: 'nature', price: 1250000, tag: 'Popular', image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=900&q=85', desc: 'Matahari terbit, telaga warna, dan dingin Dieng yang selalu dirindukan.', enDesc: 'Golden sunrises, colourful lakes, and Dieng highland air.', variants: ['Dieng Plateau', 'Dieng - Sikunir Sunrise'], itinerary: ['Berangkat malam menuju Dieng', 'Sunrise di Bukit Sikunir', 'Telaga Warna dan Kawah Sikidang', 'Kuliner lokal dan perjalanan pulang'] },
-  { id: 'jogja-slow-escape', title: 'Jogja Slow Escape', enTitle: 'Jogja Slow Escape', area: 'Jogja', duration: 3, theme: 'culture', price: 1980000, tag: 'New', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=900&q=85', desc: 'Tiga hari untuk menikmati sisi Jogja yang hangat, pelan, dan penuh rasa.', enDesc: 'Three days to experience Jogja at its warmest, slowest, most soulful pace.', variants: ['Heritage & Culinary', 'Heritage - Beach - Culture'], itinerary: ['Jelajah Keraton dan kampung heritage', 'Sunset di Parangtritis', 'Workshop batik dan kuliner malam', 'Waktu bebas dan oleh-oleh'] },
-  { id: 'karimunjawa-blue', title: 'Karimunjawa Blue Days', enTitle: 'Karimunjawa Blue Days', area: 'Karimunjawa', duration: 3, theme: 'beach', price: 2750000, tag: 'Limited', image: 'https://images.unsplash.com/photo-1507527762-9a4d7d4c0e6f?auto=format&fit=crop&w=900&q=85', desc: 'Air sebening kaca, pulau-pulau kecil, dan hari-hari tanpa terburu-buru.', enDesc: 'Crystal waters, tiny islands, and unhurried days by the sea.', variants: ['Island Hopping', 'Island Hopping - Sunset Cruise'], itinerary: ['Ferry pagi dari Jepara', 'Snorkeling dan island hopping', 'Sunset cruise', 'Waktu bebas dan ferry kembali'] }
+  {
+    id: 'prau-patakbanteng',
+    title: 'Mount Prau via Patak Banteng', enTitle: 'Mount Prau via Patak Banteng',
+    area: 'Malaysia Trip', duration: 2, theme: 'hiking', price: 1650000, tag: 'Best Seller',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85',
+    desc: 'Golden sunrise dari Puncak Prau (2.565 mdpl) melalui jalur populer Patak Banteng yang lebih singkat dan landai di awal. Cocok untuk pendaki pemula hingga berpengalaman.',
+    enDesc: 'Golden sunrise from Prau Summit (2,565 masl) via the popular Patak Banteng trail — shorter and gentler at the start. Great for beginners and seasoned hikers.',
+    trail: 'Patak Banteng',
+    variants: ['Prau via Patak Banteng - Standard', 'Prau via Patak Banteng - Private Camp'],
+    itinerary: [
+      'Hari 1  Penjemputan & perjalanan ke basecamp Patak Banteng, Dieng',
+      'Hari 1  Registrasi, briefing, dan trekking sore via Patak Banteng',
+      'Hari 1  Mendirikan camp di area Puncak Prau, makan malam',
+      'Hari 2  Summit attack dini hari, golden sunrise di Puncak Prau',
+      'Hari 2  Turun via Patak Banteng, bersih diri, eksplor singkat Dieng',
+      'Hari 2  Perjalanan pulang'
+    ]
+  },
+  {
+    id: 'merbabu-suwanting',
+    title: 'Mount Merbabu via Suwanting', enTitle: 'Mount Merbabu via Suwanting',
+    area: 'Malaysia Trip', duration: 2, theme: 'hiking', price: 2900000, tag: 'Popular',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=85',
+    desc: 'Sabana luas dan trek yang memanjakan mata menuju Puncak Merbabu (3.145 mdpl) via jalur favorit Suwanting, dengan panorama Merapi yang megah saat sunrise.',
+    enDesc: 'Wide savanna and a scenic trail to Merbabu Summit (3,145 masl) via the favourite Suwanting route, with majestic Merapi views at sunrise.',
+    trail: 'Suwanting',
+    variants: ['Merbabu via Suwanting - Standard', 'Merbabu via Suwanting - Private Camp'],
+    itinerary: [
+      'Hari 1  Penjemputan & perjalanan ke basecamp Suwanting, Magelang',
+      'Hari 1  Registrasi, briefing, trekking via pos-pos Suwanting',
+      'Hari 1  Camp di area sabana, makan malam, istirahat',
+      'Hari 2  Summit attack ke Puncak Trianggulasi/Kenteng Songo',
+      'Hari 2  Sunrise dengan view Merapi, turun via Suwanting',
+      'Hari 2  Perjalanan pulang'
+    ]
+  },
+  {
+    id: 'prau-merbabu-combo',
+    title: 'Prau + Merbabu Combo Expedition', enTitle: 'Prau + Merbabu Combo Expedition',
+    area: 'Malaysia Trip', duration: 4, theme: 'hiking', price: 4000000, tag: 'Limited',
+    image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=900&q=85',
+    desc: 'Ekspedisi dua gunung dalam satu perjalanan: Prau via Patak Banteng dan Merbabu via Suwanting, dengan hari pemulihan di Dataran Tinggi Dieng.',
+    enDesc: 'A two-mountain expedition in one journey: Prau via Patak Banteng and Merbabu via Suwanting, with a recovery day on the Dieng Plateau.',
+    trail: 'Patak Banteng & Suwanting',
+    variants: ['Combo 4D3N - Standard', 'Combo 4D3N - Full Support'],
+    itinerary: [
+      'Hari 1  Penjemputan, menuju basecamp Patak Banteng (Prau)',
+      'Hari 1-2  Trekking & sunrise Puncak Prau via Patak Banteng',
+      'Hari 3  Hari pemulihan & eksplor Dataran Tinggi Dieng',
+      'Hari 4  Trekking Merbabu via Suwanting, sunrise, pulang'
+    ]
+  }
 ];
+/* Tarif dari riset pasar (harga pasar.txt) — titik tengah rentang, IDR per 12 jam.
+   driver_only diestimasi dari Mobil+Driver+BBM dikurangi porsi BBM. */
 const seedFleet = [
-  { name: 'Toyota Avanza', type: 'MPV - 6 seats', capacity: 6, transmission: 'Automatic', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=85', specs: ['6 seats', 'Automatic', 'AC'], from: 450000 },
-  { name: 'Toyota Innova Reborn', type: 'Premium MPV - 7 seats', capacity: 7, transmission: 'Automatic', image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=85', specs: ['7 seats', 'Automatic', 'Captain seat'], from: 750000 },
-  { name: 'Toyota Hiace Premio', type: 'Van - 14 seats', capacity: 14, transmission: 'Manual', image: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=85', specs: ['14 seats', 'Manual', 'Luggage'], from: 1200000 }
+  { name: 'Toyota Avanza', type: 'MPV - 6 seats', capacity: 6, transmission: 'Automatic', image: '/image/avanza.jpg', specs: ['6 seats', 'Automatic', 'AC'], from: 500000, rates: { driver_only: 500000, driver_fuel: 725000, all_in: 850000 } },
+  { name: 'Toyota Innova Reborn', type: 'Premium MPV - 7 seats', capacity: 7, transmission: 'Automatic', image: '/image/REBORN.jpg', specs: ['7 seats', 'Automatic', 'Captain seat'], from: 700000, rates: { driver_only: 700000, driver_fuel: 950000, all_in: 1100000 } },
+  { name: 'Toyota Hiace Premio', type: 'Van - 14 seats', capacity: 14, transmission: 'Manual', image: '/image/PREMIO.jpg', specs: ['14 seats', 'Manual', 'Luggage'], from: 1100000, rates: { driver_only: 1100000, driver_fuel: 1450000, all_in: 1850000 } },
+  { name: 'Toyota Hiace Commuter', type: 'Van - 14 seats', capacity: 14, transmission: 'Manual', image: '/image/COMMUTER.jpg', specs: ['14 seats', 'Manual', 'Luggage'], from: 900000, rates: { driver_only: 900000, driver_fuel: 1200000, all_in: 1550000 } },
+  { name: 'Isuzu Elf Long', type: 'Minibus - 19 seats', capacity: 19, transmission: 'Manual', image: '/image/ELFLONG.jpg', specs: ['19 seats', 'Manual', 'Luggage besar'], from: 1100000, rates: { driver_only: 1100000, driver_fuel: 1500000, all_in: 1650000 } },
+  { name: 'Medium Bus Pariwisata', type: 'Bus - 31 seats', capacity: 31, transmission: 'Manual', image: '/image/BUSMEDIUM.jpg', specs: ['31 seats', 'Manual', 'Bagasi luas'], from: 1600000, rates: { driver_only: 1600000, driver_fuel: 2050000, all_in: 2250000 } }
 ];
 const tierCurve = (base) => [2, 3, 4, 5, 6, 7, 8, 9].map((pax, index) => ({ pax, price: roundPrice(base * [1.8, 1.35, 1, 0.96, 0.92, 0.89, 0.86, 0.83][index]) }));
+/* Malaysia hiking packages start at 4 pax (min-4-pax rule). */
+const tierCurveMalaysia = (base) => [4, 5, 6, 7, 8, 9, 10].map((pax, index) => ({ pax, price: roundPrice(base * [1, 0.96, 0.92, 0.89, 0.86, 0.83, 0.80][index]) }));
+
+/* One-time idempotent migration: replace legacy leisure packages with the 3 Malaysia hiking packages. */
+(function migrateLegacyPackages() {
+  const legacyIds = ['borobudur-merapi', 'dieng-golden-sunrise', 'jogja-slow-escape', 'karimunjawa-blue'];
+  const hasLegacy = legacyIds.some((id) => db.prepare('SELECT 1 FROM packages WHERE id=?').get(id));
+  const hasNew = db.prepare('SELECT 1 FROM packages WHERE id=?').get('prau-patakbanteng');
+  if (hasLegacy && !hasNew) {
+    db.exec('BEGIN');
+    try {
+      for (const id of legacyIds) db.prepare('DELETE FROM packages WHERE id=?').run(id);
+      const insert = db.prepare('INSERT INTO packages (id,title,en_title,area,duration,theme,price,tag,image,description,en_description,variants_json,itinerary_json,trail,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+      const tierInsert = db.prepare('INSERT OR IGNORE INTO package_price_tiers (package_id,pax,price_per_pax,season) VALUES (?,?,?,?)');
+      for (const item of seedPackages) {
+        insert.run(item.id, item.title, item.enTitle, item.area, item.duration, item.theme, item.price, item.tag, item.image, item.desc, item.enDesc, JSON.stringify(item.variants), JSON.stringify(item.itinerary), item.trail || '', now(), now());
+        for (const tier of tierCurveMalaysia(item.price)) tierInsert.run(item.id, tier.pax, tier.price, 'normal');
+      }
+      db.exec('COMMIT');
+      console.log('[migrate] Replaced legacy packages with Malaysia hiking packages.');
+    } catch (error) { db.exec('ROLLBACK'); console.error('[migrate] Failed:', error.message); }
+  }
+})();
+/* Backfill trail for existing hiking packages (idempotent). */
+(function backfillTrail() {
+  const trails = { 'prau-patakbanteng': 'Patak Banteng', 'merbabu-suwanting': 'Suwanting', 'prau-merbabu-combo': 'Patak Banteng & Suwanting' };
+  const update = db.prepare("UPDATE packages SET trail=? WHERE id=? AND (trail IS NULL OR trail='')");
+  for (const [id, trail] of Object.entries(trails)) update.run(trail, id);
+})();
+/* Terapkan harga hiking dari riset pasar (idempotent — hanya jika harga masih nilai placeholder lama). */
+(function applyRisetHikingPrices() {
+  const targets = [
+    { id: 'prau-patakbanteng', oldPrice: 3150000, price: 1650000 },
+    { id: 'merbabu-suwanting', oldPrice: 3420000, price: 2900000 },
+    { id: 'prau-merbabu-combo', oldPrice: 5850000, price: 4000000 }
+  ];
+  const updPkg = db.prepare('UPDATE packages SET price=?,updated_at=? WHERE id=?');
+  const updTier = db.prepare("UPDATE package_price_tiers SET price_per_pax=? WHERE package_id=? AND pax=? AND season='normal'");
+  const variants = db.prepare('SELECT id FROM package_variants WHERE package_id=?');
+  const updVarTier = db.prepare("UPDATE variant_price_tiers SET price_per_pax=? WHERE variant_id=? AND pax=? AND season='normal'");
+  for (const t of targets) {
+    const row = db.prepare('SELECT price FROM packages WHERE id=?').get(t.id);
+    if (!row || Number(row.price) !== t.oldPrice) continue; // sudah di-update / diubah admin
+    db.exec('BEGIN');
+    try {
+      updPkg.run(t.price, now(), t.id);
+      const tiers = tierCurveMalaysia(t.price);
+      for (const tier of tiers) {
+        updTier.run(tier.price, t.id, tier.pax);
+        for (const v of variants.all(t.id)) updVarTier.run(tier.price, v.id, tier.pax);
+      }
+      db.exec('COMMIT');
+      console.log(`[migrate] Harga riset diterapkan: ${t.id} -> ${t.price}`);
+    } catch (e) { db.exec('ROLLBACK'); console.error('[migrate] harga gagal:', e.message); }
+  }
+})();
 
 if (db.prepare('SELECT COUNT(*) AS n FROM packages').get().n === 0) {
-  const insert = db.prepare('INSERT INTO packages (id,title,en_title,area,duration,theme,price,tag,image,description,en_description,variants_json,itinerary_json,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+  const insert = db.prepare('INSERT INTO packages (id,title,en_title,area,duration,theme,price,tag,image,description,en_description,variants_json,itinerary_json,trail,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
   const tierInsert = db.prepare('INSERT INTO package_price_tiers (package_id,pax,price_per_pax,season) VALUES (?,?,?,?)');
   for (const item of seedPackages) {
-    insert.run(item.id, item.title, item.enTitle, item.area, item.duration, item.theme, item.price, item.tag, item.image, item.desc, item.enDesc, JSON.stringify(item.variants), JSON.stringify(item.itinerary), now(), now());
-    for (const tier of tierCurve(item.price)) tierInsert.run(item.id, tier.pax, tier.price, 'normal');
+    insert.run(item.id, item.title, item.enTitle, item.area, item.duration, item.theme, item.price, item.tag, item.image, item.desc, item.enDesc, JSON.stringify(item.variants), JSON.stringify(item.itinerary), item.trail || '', now(), now());
+    const curve = String(item.area).toLowerCase().includes('malaysia') ? tierCurveMalaysia : tierCurve;
+    for (const tier of curve(item.price)) tierInsert.run(item.id, tier.pax, tier.price, 'normal');
   }
 }
 if (db.prepare('SELECT COUNT(*) AS n FROM fleet').get().n === 0) {
   const insert = db.prepare('INSERT INTO fleet (name,type,image,specs_json,capacity,transmission,status,from_price,updated_at) VALUES (?,?,?,?,?,?,?,?,?)');
   for (const item of seedFleet) insert.run(item.name, item.type, item.image, JSON.stringify(item.specs), item.capacity, item.transmission, 'idle', item.from, now());
 }
-if (!db.prepare('SELECT COUNT(*) AS n FROM rental_rates').get().n) {
-  const insert = db.prepare('INSERT OR IGNORE INTO rental_rates (vehicle_id,service_type,duration_hours,price) VALUES (?,?,?,?)');
-  for (const vehicle of db.prepare('SELECT id,name,from_price FROM fleet').all()) {
-    insert.run(vehicle.id, 'driver_only', 12, vehicle.from_price);
-    insert.run(vehicle.id, 'driver_fuel', 12, Math.round(vehicle.from_price * 1.35));
-    insert.run(vehicle.id, 'all_in', 12, Math.round(vehicle.from_price * 1.5));
+/* Idempotent sync: arahkan fleet ke foto lokal + tambah unit baru + terapkan tarif riset. */
+(function syncFleetAndRates() {
+  const upsertRate = db.prepare('INSERT INTO rental_rates (vehicle_id,service_type,duration_hours,price) VALUES (?,?,?,?) ON CONFLICT(vehicle_id,service_type,duration_hours) DO UPDATE SET price=excluded.price');
+  const insertFleet = db.prepare('INSERT INTO fleet (name,type,image,specs_json,capacity,transmission,status,from_price,updated_at) VALUES (?,?,?,?,?,?,?,?,?)');
+  const updateImage = db.prepare('UPDATE fleet SET image=?,from_price=?,updated_at=? WHERE id=?');
+  for (const item of seedFleet) {
+    let row = db.prepare('SELECT id FROM fleet WHERE lower(name)=lower(?)').get(item.name);
+    if (!row) {
+      const r = insertFleet.run(item.name, item.type, item.image, JSON.stringify(item.specs), item.capacity, item.transmission, 'idle', item.from, now());
+      row = { id: Number(r.lastInsertRowid) };
+    } else if (String(db.prepare('SELECT image FROM fleet WHERE id=?').get(row.id).image || '').includes('unsplash') || !String(db.prepare('SELECT image FROM fleet WHERE id=?').get(row.id).image || '').startsWith('/image/')) {
+      updateImage.run(item.image, item.from, now(), row.id);
+    }
+    for (const [service, price] of Object.entries(item.rates)) upsertRate.run(row.id, service, 12, price);
   }
-}
+})();
 // Self-drive is retired. Existing historical bookings/KYC rows remain available for audit,
 // while no new self-drive rate can appear in the public or Owner catalog.
 db.prepare("DELETE FROM rental_rates WHERE service_type='self_drive'").run();
@@ -467,7 +595,7 @@ function calculateQuote({ packageId, variantId, pax, travelDate, vehicleId, serv
   if (!row) throw new Error('Package not found');
   const normalizedService = normalizeServiceType(serviceType);
   const people = Number(pax || 4);
-  if (!Number.isInteger(people) || people < 2 || people > 9) throw Object.assign(new Error('Jumlah peserta harus 2–9 orang'), { statusCode: 400 });
+  if (!Number.isInteger(people) || people < 2 || people > 10) throw Object.assign(new Error('Jumlah peserta harus 2–10 orang'), { statusCode: 400 });
   const date = travelDate || today();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0,10) !== date || date < today()) throw Object.assign(new Error('Tanggal perjalanan tidak valid atau sudah lewat'), { statusCode: 400 });
   const packageData = rowToPackage(row, travelDate);
@@ -531,15 +659,28 @@ function safePublicFile(pathname) {
   if (!allowed.has(pathname)) return null;
   return pathname === '/' ? path.join(ROOT, 'index.html') : path.join(ROOT, pathname.slice(1));
 }
+function serveImageFile(res, filePath) {
+  const extension = path.extname(filePath).toLowerCase();
+  const type = extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' : extension === '.png' ? 'image/png' : extension === '.gif' ? 'image/gif' : 'image/webp';
+  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' });
+  fs.createReadStream(filePath).pipe(res);
+  return true;
+}
 function serveStatic(req, res, pathname) {
   const file = safePublicFile(pathname);
+  if (pathname.startsWith('/image/')) {
+    const name = path.basename(pathname);
+    if (!/^[a-z0-9._-]+\.(?:jpg|jpeg|png|webp|gif)$/i.test(name) || name.includes('..')) return false;
+    const imgFile = path.join(ROOT, 'image', name);
+    if (!fs.existsSync(imgFile)) return false;
+    return serveImageFile(res, imgFile);
+  }
   if (pathname.startsWith('/public-uploads/')) {
     const name = path.basename(pathname);
     if (!/^[a-z0-9-]+\.(?:jpg|jpeg|png|webp|gif)$/i.test(name)) return false;
     const publicFile = path.join(PUBLIC_DIR, name);
     if (!fs.existsSync(publicFile)) return false;
-    const extension = path.extname(name).toLowerCase(); const type = extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' : extension === '.png' ? 'image/png' : extension === '.gif' ? 'image/gif' : 'image/webp';
-    res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' }); fs.createReadStream(publicFile).pipe(res); return true;
+    return serveImageFile(res, publicFile);
   }
   if (!file || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return false;
   const type = pathname.endsWith('.html') || pathname === '/' ? 'text/html; charset=utf-8' : pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8';
@@ -872,6 +1013,61 @@ async function handler(req, res) {
       const body = await readBody(req);
       db.prepare('UPDATE promos SET title=?,en_title=?,discount_type=?,discount_value=?,starts_on=?,ends_on=?,package_id=?,image=?,active=?,updated_at=? WHERE id=?')
         .run(body.title, body.enTitle || body.title, body.discountType || 'percent', Number(body.discountValue || 0), body.startsOn || null, body.endsOn || null, body.packageId || null, body.image || '', body.active === false ? 0 : 1, now(), Number(promoMatch[1]));
+      return json(res, 200, { ok: true });
+    }
+    /* ===== FAQ (Owner) ===== */
+    if (p === '/api/owner/faqs' && req.method === 'GET') return json(res, 200, db.prepare('SELECT * FROM faqs ORDER BY sort_order,id').all());
+    if (p === '/api/owner/faqs' && req.method === 'POST') {
+      const body = await readBody(req);
+      if (!body.question || !body.answer) return json(res, 400, { error: 'Pertanyaan & jawaban wajib diisi' });
+      const r = db.prepare('INSERT INTO faqs (question,en_question,answer,en_answer,category,sort_order,published,archived,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+        .run(body.question, body.enQuestion || '', body.answer, body.enAnswer || '', body.category || 'general', Number(body.sortOrder || 0), body.published === false ? 0 : 1, 0, now(), now());
+      audit('CREATE', 'faq', Number(r.lastInsertRowid), null, body);
+      return json(res, 201, { id: Number(r.lastInsertRowid) });
+    }
+    const faqMatch = p.match(/^\/api\/owner\/faqs\/(\d+)$/);
+    if (faqMatch && ['PUT', 'PATCH'].includes(req.method)) {
+      const body = await readBody(req); const id = Number(faqMatch[1]);
+      const prev = db.prepare('SELECT * FROM faqs WHERE id=?').get(id);
+      if (!prev) return json(res, 404, { error: 'FAQ tidak ditemukan' });
+      db.prepare('UPDATE faqs SET question=?,en_question=?,answer=?,en_answer=?,category=?,sort_order=?,published=?,updated_at=? WHERE id=?')
+        .run(body.question ?? prev.question, body.enQuestion ?? prev.en_question, body.answer ?? prev.answer, body.enAnswer ?? prev.en_answer, body.category ?? prev.category, Number(body.sortOrder ?? prev.sort_order), body.published === undefined ? prev.published : (body.published ? 1 : 0), now(), id);
+      audit('UPDATE', 'faq', id, prev, body);
+      return json(res, 200, { ok: true });
+    }
+    if (faqMatch && req.method === 'DELETE') {
+      const id = Number(faqMatch[1]);
+      db.prepare('UPDATE faqs SET archived=1,updated_at=? WHERE id=?').run(now(), id);
+      audit('ARCHIVE', 'faq', id, null, null);
+      return json(res, 200, { ok: true });
+    }
+    /* ===== Homepage content (Owner) ===== */
+    if (p === '/api/owner/homepage' && req.method === 'GET') return json(res, 200, db.prepare('SELECT * FROM homepage_sections ORDER BY sort_order,id').all());
+    const homeMatch = p.match(/^\/api\/owner\/homepage\/([^/]+)$/);
+    if (homeMatch && ['PUT', 'PATCH', 'POST'].includes(req.method)) {
+      const body = await readBody(req); const key = decodeURIComponent(homeMatch[1]);
+      const prev = db.prepare('SELECT * FROM homepage_sections WHERE section_key=?').get(key);
+      db.prepare('INSERT INTO homepage_sections (section_key,title,en_title,body,en_body,image,sort_order,visible,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(section_key) DO UPDATE SET title=excluded.title,en_title=excluded.en_title,body=excluded.body,en_body=excluded.en_body,image=excluded.image,sort_order=excluded.sort_order,visible=excluded.visible,updated_at=excluded.updated_at')
+        .run(key, body.title || '', body.enTitle || body.title || '', body.body || '', body.enBody || body.body || '', body.image || '', Number(body.sortOrder || 0), body.visible === false ? 0 : 1, now(), now());
+      audit(prev ? 'UPDATE' : 'CREATE', 'homepage_section', key, prev, body);
+      return json(res, 200, { ok: true });
+    }
+    /* ===== Fleet rental rates (Owner) ===== */
+    const fleetRateMatch = p.match(/^\/api\/owner\/fleet\/(\d+)\/rates$/);
+    if (fleetRateMatch && req.method === 'GET') return json(res, 200, db.prepare('SELECT service_type AS serviceType,price FROM rental_rates WHERE vehicle_id=? AND duration_hours=12').all(Number(fleetRateMatch[1])));
+    if (fleetRateMatch && ['PUT', 'POST'].includes(req.method)) {
+      const body = await readBody(req); const vid = Number(fleetRateMatch[1]);
+      const vehicle = db.prepare('SELECT id FROM fleet WHERE id=?').get(vid);
+      if (!vehicle) return json(res, 404, { error: 'Unit tidak ditemukan' });
+      const upd = db.prepare('UPDATE rental_rates SET price=? WHERE vehicle_id=? AND service_type=? AND duration_hours=12');
+      const ins = db.prepare('INSERT INTO rental_rates (vehicle_id,service_type,duration_hours,price) VALUES (?,?,12,?)');
+      for (const service of ['driver_only', 'driver_fuel', 'all_in']) {
+        if (body[service] === undefined) continue;
+        const price = Number(body[service] || 0);
+        const res1 = upd.run(price, vid, service);
+        if (res1.changes === 0) ins.run(vid, service, price);
+      }
+      audit('UPDATE', 'rental_rates', vid, null, body);
       return json(res, 200, { ok: true });
     }
     if (p === '/api/owner/uploads' && req.method === 'POST') {
